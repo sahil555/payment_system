@@ -12,7 +12,11 @@ class PaymentService:
         # 1. Idempotency
         existing = await self.idempotency.get(payload.idempotency_key)
         if existing:
-            return {"status": "duplicate"}
+            return {
+                "status": "Invalid", 
+                "message": "Duplicate request", 
+                "payment_id": existing
+            }
 
         # 2. Create Payment
         payment = Payment(
@@ -43,7 +47,10 @@ class PaymentService:
         # 6. Kafka event
         await self.kafka.send(
             "payments",
-            {"payment_id": payment.id, "status": payment.status}
+            {
+                "payment_id": payment.id, 
+                "status": payment.status
+            }
         )
 
         return payment
